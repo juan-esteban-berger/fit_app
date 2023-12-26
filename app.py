@@ -109,14 +109,14 @@ if session_messages["sport"] == "running":
     with col2:
         # Convert m/s to min/km
         min_per_km = 1000 / session_messages['enhanced_avg_speed'] / 60
-        st.write(f"Average Speed {min_per_km:.2f}min/km")
+        st.write(f"Average Speed: {min_per_km:.2f}min/km")
         st.write(f"Average Cadence: {session_messages['avg_cadence']}rpm")
     with col3:
-        st.write(f"Calories {session_messages['total_calories']} kcal")
-        st.write(f"Average Temperature {session_messages['avg_temperature']}°C")
+        st.write(f"Calories: {session_messages['total_calories']} kcal")
+        st.write(f"Average Temperature: {session_messages['avg_temperature']}°C")
     with col4:
-        st.write(f"Total Ascent {session_messages['total_ascent']}m")
-        st.write(f"Total Descent {session_messages['total_descent']}m")
+        st.write(f"Total Ascent: {session_messages['total_ascent']}m")
+        st.write(f"Total Descent: {session_messages['total_descent']}m")
 
     # Convert speed from m/s to min/km pace in datetime format
     records['enhanced_speed'] = 1000 / records['enhanced_speed'] / 60
