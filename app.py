@@ -107,8 +107,12 @@ st.plotly_chart(fig_weight, use_container_width=True)
 # st.write(df_weight)
 
 # Create two separate charts with plotly express
-fig1 = px.bar(df_weight, x='date', y='run_kms', title='Run Kms')
-fig2 = px.bar(df_weight, x='date', y='run_calories', title='Run Calories')
+fig1 = px.bar(df_weight, x='date', y='run_kms',
+              color = df_weight['run_type'],
+              title='Run Kms')
+fig2 = px.bar(df_weight, x='date', y='run_calories',
+                color = df_weight['run_type'],
+                title='Run Calories')
 
 # Create two columns in Streamlit page
 col1, col2 = st.columns(2)
