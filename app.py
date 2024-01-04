@@ -156,7 +156,7 @@ local_tz = pytz.timezone(selected_tz)  # Define local_tz using the selected time
 
 # Streamlit date filters
 today = datetime.now().date()
-yesterday = today - timedelta(days=1)
+first_date = today - timedelta(days=7)
 # Streamlit date filters
 date_col1, date_col2 = st.columns(2)
 #Start time from midnight
@@ -164,7 +164,7 @@ time_start = time(0, 0, 0)
 #End time to midnight
 time_end = time(23, 59, 59)
 with date_col1:
-    date_start = st.date_input("Start Date",value=yesterday)
+    date_start = st.date_input("Start Date",value=first_date)
     date_end = st.date_input("End Date",value=today)
 with date_col2:
     time_start = st.time_input('Start Time', value=time_start)
@@ -293,6 +293,6 @@ for i in range(len(garmin_collection) -1, -1, -1):
     
     # Display the interactive map in the Streamlit application
     # Add scrollbar for width
-    folium_width = st.slider(f'Map Width_slider_{i}', 0, 2000, 1000)
+    folium_width = st.slider(f'Map Width_slider_{i}', 0, 2000, 1075)
     folium_static(m, width=folium_width, height=500)
     # folium_static(m)
