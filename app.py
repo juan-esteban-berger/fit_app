@@ -240,7 +240,6 @@ client.close()
 
 # Process collection details (the code below assumes all `start_time` are in UTC)
 for i in range(len(garmin_collection) -1, -1, -1):
-
     # Process each session message
     session_messages = garmin_collection[i]["session_mesgs"][0]
     if session_messages["sport"] == "running":
@@ -292,25 +291,34 @@ for i in range(len(garmin_collection) -1, -1, -1):
             st.write(f"Total Ascent: {session_messages['total_ascent']}m")
             st.write(f"Total Descent: {session_messages['total_descent']}m")
 
+        # Make zero values in 'enhanced_speed' column null
+        records['enhanced_speed'] = records['enhanced_speed'].replace(0, np.nan)
+        # Make zero values in 'cadence' column null
+        records['cadence'] = records['cadence'].replace(0, np.nan)
+
         # Convert speed from m/s to min/km pace in datetime format (if the value is zero, make the value 0)
         records['enhanced_speed'] = records['enhanced_speed'].apply(lambda x: 0 if x == 0 else 1000 / x / 60)
 
-        # If there are any values in enhanced speed that are 0, null, or not a number (or any other problematic thing) make the value 0.0
-        # Create figure with secondary y-axis using Plotly Graph Objects
+        # Make any values above 11 min/km null
+        records['enhanced_speed'] = records['enhanced_speed'].apply(lambda x: np.nan if x > 12 else x)
+
+        # Create figure with secondary and tertiary y-axis using Plotly Graph Objects
         fig = go.Figure()
-    
+        
         # Add traces for each series
         fig.add_trace(go.Scatter(x=records['timestamp'], y=records['enhanced_speed'], name='Speed'))
         fig.add_trace(go.Scatter(x=records['timestamp'], y=records['enhanced_altitude'], name='Altitude', yaxis='y2'))
-        # You can add more traces for other series, assigning them to different axes
-    
+        fig.add_trace(go.Scatter(x=records['timestamp'], y=records['cadence'], name='Cadence (RPM)', yaxis='y3'))
+        
         # Create axis objects
         fig.update_layout(
-            yaxis=dict(title='Speed (min/km)', autorange='reversed'),
-            yaxis2=dict(title='Altitude (m)', overlaying='y', side='right')
-            # You can add more y-axis configurations for other series here
+            xaxis=dict(domain=[0.3, 1], showgrid=False),
+            yaxis=dict(title='Speed (min/km)', position=0.1, autorange='reversed', showgrid=False),
+            yaxis2=dict(title='Altitude (m)', overlaying='y', side='left', position=0.2, showgrid=False),
+            yaxis3=dict(title='Cadence (RPM)', overlaying='y', side='right', showgrid=False)
         )
-    
+        
+        # Show the figure
         st.plotly_chart(fig, use_container_width=True)
         
         #########################################################################
@@ -401,8 +409,13 @@ for i in range(len(garmin_collection) -1, -1, -1):
             st.write(f"Average Power: {average_power:.2f}W")
             st.write(f"Calories: {session_messages['total_calories']} kcal")
 
-        # If there are any 'nan' or 'null' values in enhanced_speed, power, or cadence, replace them with 0
-        records[['enhanced_speed', 'power', 'cadence']] = records[['enhanced_speed', 'power', 'cadence']].fillna(0)
+        # Make zero values in 'enhanced_speed' column null
+        records['enhanced_speed'] = records['enhanced_speed'].replace(0, np.nan)
+        # Make zero values in 'cadence' column null
+        records['cadence'] = records['cadence'].replace(0, np.nan)
+
+        # Make zero values in 'power' column null
+        records['power'] = records['power'].replace(0, np.nan)
         
         # Create figure with secondary and tertiary y-axis using Plotly Graph Objects
         fig = go.Figure()
