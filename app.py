@@ -83,6 +83,35 @@ st.title('Fitness Dashboard')
 
 # st.write(df_weight)
 
+#########################################################################
+st.markdown('## 10 day Median Weight and Average Calories')
+# First, you need to calculate 10 day median for the 'lbs' column, 
+# 10 day average for the 'caloric_intake' column and 7 day average for the 'cardio_calories' column
+df_weight['median_10d_lbs'] = df_weight['lbs'].rolling(window=10, min_periods = 3).median()
+df_weight['avg_10d_caloric_intake'] = df_weight['caloric_intake'].rolling(window=10, min_periods = 3).mean()
+df_weight['avg_7d_cardio_calories'] = df_weight['cardio_calories'].rolling(window=10, min_periods = 3).mean()
+
+# Create another line chart for df_weight with 'date' on the x-axis, and 'median_10d_lbs', 'avg_10d_caloric_intake', 'avg_7d_cardio_calories' on the y-axes
+fig_weight_avg = go.Figure()
+
+# Add traces
+fig_weight_avg.add_trace(go.Scatter(x=df_weight['date'], y=df_weight['median_10d_lbs'], name='10 Day Median Lbs'))
+fig_weight_avg.add_trace(go.Scatter(x=df_weight['date'], y=df_weight['avg_10d_caloric_intake'], name='10 Day Avg Caloric Intake', yaxis='y2'))
+fig_weight_avg.add_trace(go.Scatter(x=df_weight['date'], y=df_weight['avg_7d_cardio_calories'], name='7 Day Avg Cardio Calories', yaxis='y3'))
+
+# Create axis objects
+fig_weight_avg.update_layout(
+    xaxis=dict(domain=[0.3, 1], showgrid=False),
+    yaxis=dict(title='10 Day Median Lbs', position=0.1, showgrid=False),
+    yaxis2=dict(title='10 Day Avg Caloric Intake', overlaying='y', side='left', position=0.2, showgrid=False),
+    yaxis3=dict(title='7 Day Avg Cardio Calories', overlaying='y', side='right', showgrid=False)
+)
+
+# Show the figure
+st.plotly_chart(fig_weight_avg, use_container_width=True)
+
+#########################################################################
+st.markdown('## Daily Weight')
 # Create a line chart for df_weight with 'date' on the x-axis, and 'lbs', 'caloric_intake', 'cardio_calories' on the y-axes
 fig_weight = go.Figure()
 
@@ -103,9 +132,9 @@ fig_weight.update_layout(
 st.plotly_chart(fig_weight, use_container_width=True)
 
 #########################################################################
-
 # st.write(df_weight)
 
+#########################################################################
 # Create two separate charts with plotly express
 fig1 = px.bar(df_weight, x='date', y='run_kms',
               color = df_weight['run_type'],
@@ -115,14 +144,32 @@ fig2 = px.bar(df_weight, x='date', y='run_calories',
                 title='Run Calories')
 
 # Create two columns in Streamlit page
-col1, col2 = st.columns(2)
+run_col1, run_col2 = st.columns(2)
 
 # Show each figure in respective column
-col1.plotly_chart(fig1, use_container_width=True)
-col2.plotly_chart(fig2, use_container_width=True)
+run_col1.plotly_chart(fig1, use_container_width=True)
+run_col2.plotly_chart(fig2, use_container_width=True)
 
+#########################################################################
+# Create two separate charts with plotly express
+fig3 = px.bar(df_weight, x='date', y='bike_kms',
+              color = df_weight['bike_type'],
+              title='Bike Kms')
+fig4 = px.bar(df_weight, x='date', y='bike_calories',
+                color = df_weight['bike_type'],
+                title='Bike Calories')
+
+# Create two columns in Streamlit page
+bike_col1, bike_col2 = st.columns(2)
+
+# Show each figure in respective column
+bike_col1.plotly_chart(fig3, use_container_width=True)
+bike_col2.plotly_chart(fig4, use_container_width=True)
+
+#########################################################################
 # st.write(df_strength)
 
+#########################################################################
 # Filter data for pull ups and push ups
 df_pull_ups = df_strength[df_strength['exercise'] == 'pull ups']
 df_push_ups = df_strength[df_strength['exercise'] == 'push ups']
@@ -196,32 +243,32 @@ for i in range(len(garmin_collection) -1, -1, -1):
 
     # Process each session message
     session_messages = garmin_collection[i]["session_mesgs"][0]
-    session_messages_utc = session_messages.copy()
-
-    # Parse the start time of the activity and make it timezone aware as UTC
-    session_messages['start_time'] = parse(session_messages['start_time']).replace(tzinfo=pytz.utc)
-    
-    # Now convert the start time from UTC to the selected local timezone
-    session_messages['start_time'] = session_messages['start_time'].astimezone(local_tz)
-    
-    # The activity title should be displayed using the local timezone:
-    activity_title = session_messages["start_time"].strftime('%Y-%m-%d %H:%M:%S') + "_" + \
-                 session_messages["sport"] + "_" + session_messages["sub_sport"]
-
-    records = pd.DataFrame(garmin_collection[0]["record_mesgs"])
-
-    # Convert 'timestamp' column to datetime objects with timezone
-    records['timestamp'] = records['timestamp'].apply(parse)
-
-    # Convert all timestamps in 'records' from UTC to the selected timezone
-    records['timestamp'] = records['timestamp'].dt.tz_convert(local_tz)
-
-    st.markdown(f"## {activity_title}")
-    # write utc time for reference
-    st.write(f"Start Time (UTC): {session_messages_utc['start_time']}")
-
-    col1, col2, col3, col4 = st.columns(4)
     if session_messages["sport"] == "running":
+        session_messages_utc = session_messages.copy()
+
+        # Parse the start time of the activity and make it timezone aware as UTC
+        session_messages['start_time'] = parse(session_messages['start_time']).replace(tzinfo=pytz.utc)
+        
+        # Now convert the start time from UTC to the selected local timezone
+        session_messages['start_time'] = session_messages['start_time'].astimezone(local_tz)
+        
+        # The activity title should be displayed using the local timezone:
+        activity_title = session_messages["start_time"].strftime('%Y-%m-%d %H:%M:%S') + "_" + \
+                     session_messages["sport"] + "_" + session_messages["sub_sport"]
+
+        records = pd.DataFrame(garmin_collection[i]["record_mesgs"])
+
+        # Convert 'timestamp' column to datetime objects with timezone
+        records['timestamp'] = records['timestamp'].apply(parse)
+
+        # Convert all timestamps in 'records' from UTC to the selected timezone
+        records['timestamp'] = records['timestamp'].dt.tz_convert(local_tz)
+
+        st.markdown(f"## {activity_title}")
+        # write utc time for reference
+        st.write(f"Start Time (UTC): {session_messages_utc['start_time']}")
+
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
             # Convert Distance to km
             km_distance = session_messages['total_distance'] / 1000
@@ -244,7 +291,7 @@ for i in range(len(garmin_collection) -1, -1, -1):
         with col4:
             st.write(f"Total Ascent: {session_messages['total_ascent']}m")
             st.write(f"Total Descent: {session_messages['total_descent']}m")
-   
+
         # Convert speed from m/s to min/km pace in datetime format (if the value is zero, make the value 0)
         records['enhanced_speed'] = records['enhanced_speed'].apply(lambda x: 0 if x == 0 else 1000 / x / 60)
 
@@ -265,34 +312,113 @@ for i in range(len(garmin_collection) -1, -1, -1):
         )
     
         st.plotly_chart(fig, use_container_width=True)
-    
-    #########################################################################
-    # Create a subset DataFrame where both latitude and longitude position is not null
-    records_subset = records.dropna(subset=['position_lat', 'position_long'])
-    
-    # Convert latitude and longitude from semicircles to degrees
-    records_subset['position_lat'] = records_subset['position_lat'] * (180 / 2**31)
-    records_subset['position_long'] = records_subset['position_long'] * (180 / 2**31)
-    
-    # Create a new map object centered at the mean of the latitude and longitude
-    center_lat = records_subset['position_lat'].mean()
-    center_long = records_subset['position_long'].mean()
-    
-    # Initialize the map with a more zoomed in value
-    zoom_start = 17  # Closer view where most of the route should be visible
-    
-    m = folium.Map(location=[center_lat, center_long], zoom_start=zoom_start)
-    
-    # Add the running route using a line to represent the path
-    folium.PolyLine(
-        list(zip(records_subset['position_lat'], records_subset['position_long'])),
-        weight=5,
-        color='blue',
-        line_opacity=0.8
-    ).add_to(m)
-    
-    # Display the interactive map in the Streamlit application
-    # Add scrollbar for width
-    folium_width = st.slider(f'Map Width_slider_{i}', 0, 2000, 1075)
-    folium_static(m, width=folium_width, height=500)
-    # folium_static(m)
+        
+        #########################################################################
+        # Create a subset DataFrame where both latitude and longitude position is not null
+        records_subset = records.dropna(subset=['position_lat', 'position_long'])
+        
+        # Convert latitude and longitude from semicircles to degrees
+        records_subset['position_lat'] = records_subset['position_lat'] * (180 / 2**31)
+        records_subset['position_long'] = records_subset['position_long'] * (180 / 2**31)
+        
+        # Create a new map object centered at the mean of the latitude and longitude
+        center_lat = records_subset['position_lat'].mean()
+        center_long = records_subset['position_long'].mean()
+        
+        # Initialize the map with a more zoomed in value
+        zoom_start = 17  # Closer view where most of the route should be visible
+        
+        m = folium.Map(location=[center_lat, center_long], zoom_start=zoom_start)
+        
+        # Add the running route using a line to represent the path
+        folium.PolyLine(
+            list(zip(records_subset['position_lat'], records_subset['position_long'])),
+            weight=5,
+            color='blue',
+            line_opacity=0.8
+        ).add_to(m)
+        
+        # Display the interactive map in the Streamlit application
+        # Add scrollbar for width
+        folium_width = st.slider(f'Map Width_slider_{i}', 0, 2000, 1075)
+        folium_static(m, width=folium_width, height=500)
+        # folium_static(m)
+#########################################################################
+    if (session_messages["sport"] == "cycling") & (session_messages["sub_sport"] == "indoor_cycling"):
+        session_messages_utc = session_messages.copy()
+
+        # Parse the start time of the activity and make it timezone aware as UTC
+        session_messages['start_time'] = parse(session_messages['start_time']).replace(tzinfo=pytz.utc)
+        
+        # Now convert the start time from UTC to the selected local timezone
+        session_messages['start_time'] = session_messages['start_time'].astimezone(local_tz)
+        
+        # The activity title should be displayed using the local timezone:
+        activity_title = session_messages["start_time"].strftime('%Y-%m-%d %H:%M:%S') + "_" + \
+                     session_messages["sport"] + "_" + session_messages["sub_sport"]
+
+        records = pd.DataFrame(garmin_collection[i]["record_mesgs"])
+
+        # Convert 'timestamp' column to datetime objects with timezone
+        records['timestamp'] = records['timestamp'].apply(parse)
+
+        # Convert all timestamps in 'records' from UTC to the selected timezone
+        records['timestamp'] = records['timestamp'].dt.tz_convert(local_tz)
+
+        # Convert speed from m/s to km/h
+        records['enhanced_speed'] = records['enhanced_speed'] * 3.6
+
+        # Calculate average power from records
+        average_power = records['power'].mean()
+
+        # Calculate average cadence from records
+        average_cadence = records['cadence'].mean()
+
+        # Calculate average speed from records
+        average_speed = records['speed'].mean()
+
+
+        st.markdown(f"## {activity_title}")
+        # write utc time for reference
+        st.write(f"Start Time (UTC): {session_messages_utc['start_time']}")
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            # Convert Distance to km
+            km_distance = session_messages['total_distance'] / 1000
+            st.write(f"Distance: {km_distance:.2f}km")
+            # Convert Duration from seconds to hh:mm:ss
+            time_elapsed = pd.to_timedelta(session_messages['total_elapsed_time'], unit='s')
+            # Cleanup the time format (remove days)
+            time_elapsed = str(time_elapsed).split()[2]
+            # Remove stuff after seconds
+            time_elapsed = time_elapsed.split('.')[0]
+            st.write(f"Duration: {time_elapsed}")
+        with col2:
+            st.write(f"Average Speed: {average_speed:.2f}km/h")
+            st.write(f"Average Cadence: {average_cadence:.2f}rpm")
+        with col3:
+            st.write(f"Average Power: {average_power:.2f}W")
+            st.write(f"Calories: {session_messages['total_calories']} kcal")
+
+        # If there are any 'nan' or 'null' values in enhanced_speed, power, or cadence, replace them with 0
+        records[['enhanced_speed', 'power', 'cadence']] = records[['enhanced_speed', 'power', 'cadence']].fillna(0)
+        
+        # Create figure with secondary and tertiary y-axis using Plotly Graph Objects
+        fig = go.Figure()
+        
+        # Add traces for each series
+        fig.add_trace(go.Scatter(x=records['timestamp'], y=records['enhanced_speed'], name='Speed (km/h)'))
+        fig.add_trace(go.Scatter(x=records['timestamp'], y=records['power'], name='Power (W)', yaxis='y2'))
+        fig.add_trace(go.Scatter(x=records['timestamp'], y=records['cadence'], name='Cadence (RPM)', yaxis='y3'))
+        
+        # Create axis objects
+        fig.update_layout(
+            xaxis=dict(domain=[0.3, 1], showgrid=False),
+            yaxis=dict(title='Speed (km/h)', position=0.1, showgrid=False),
+            yaxis2=dict(title='Power (W)', overlaying='y', side='left', position=0.2, showgrid=False),
+            yaxis3=dict(title='Cadence (RPM)', overlaying='y', side='right', showgrid=False)
+        )
+        
+        # Display the figure
+        st.plotly_chart(fig, use_container_width=True)
