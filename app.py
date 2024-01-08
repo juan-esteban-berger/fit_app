@@ -84,6 +84,30 @@ st.title('Fitness Dashboard')
 # st.write(df_weight)
 
 #########################################################################
+# Streamlit code
+mcol1, mcol2, mcol3, mcol4 = st.columns(4)
+mgoal1 = 125
+mgoal2 = 123
+mgoal3 = 125
+mgoal4 = 2
+# Calculate the most recent weight (most recent 'date' value)
+recent_weight = df_weight['lbs'].iloc[-1]
+mdiff1 = recent_weight - mgoal1
+mdiff2 = recent_weight - mgoal2
+# Calculate the median weight for the last 10 days
+median_weight = df_weight['lbs'].iloc[-10:].median()
+mdiff3 = median_weight - mgoal3
+# Calculate the standard deviation for the last 10 days
+std_weight = df_weight['lbs'].iloc[-10:].std()
+mdiff4 = std_weight - mgoal4
+# round to 2 decimal places
+mdiff4 = round(mdiff4, 2)
+mcol1.metric("Short Term Low Goal", mgoal1, mdiff1)
+mcol2.metric("Mid Term Low Goal", mgoal2, mdiff2)
+mcol3.metric("Median Weight Goal", mgoal3, mdiff3)
+mcol4.metric("Standard Deviation Goal", mgoal4, mdiff4)
+
+#########################################################################
 st.markdown('## 10 day Median Weight and Average Calories')
 # First, you need to calculate 10 day median for the 'lbs' column, 
 # 10 day average for the 'caloric_intake' column and 7 day average for the 'cardio_calories' column
@@ -130,6 +154,31 @@ fig_weight.update_layout(
 
 # Show the figure
 st.plotly_chart(fig_weight, use_container_width=True)
+
+#########################################################################
+st.markdown('## 10 Day Weight Standard Deviation')
+# Calculate the rolling standard deviation for the 'lbs' column with a window of 10 days
+df_weight['std_10d_lbs'] = df_weight['lbs'].rolling(window=10, min_periods=1).std()
+
+# Create a line chart for the rolling standard deviation
+fig_std_dev = go.Figure()
+
+# Add trace for standard deviation
+fig_std_dev.add_trace(go.Scatter(x=df_weight['date'],
+                                 y=df_weight['std_10d_lbs'],
+                                 name='10 Day Std Dev Lbs'))
+
+# Update layout to add titles and adjust axes
+fig_std_dev.update_layout(
+    title='10 Day Rolling Standard Deviation of Weight',
+    xaxis_title='Date',
+    yaxis_title='Standard Deviation (lbs)',
+    xaxis=dict(showgrid=False),
+    yaxis=dict(showgrid=False)
+)
+
+# Show the figure
+st.plotly_chart(fig_std_dev, use_container_width=True)
 
 #########################################################################
 # st.write(df_weight)
